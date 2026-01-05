@@ -1,0 +1,74 @@
+#pragma once
+
+#include <cmath>
+
+#include "Dense"
+
+namespace Eigen {
+
+class Quaterniond {
+ public:
+  Quaterniond() : w_(1.0), x_(0.0), y_(0.0), z_(0.0) {}
+  Quaterniond(double w, double x, double y, double z) : w_(w), x_(x), y_(y), z_(z) {}
+  explicit Quaterniond(const Matrix3d &R) { fromRotationMatrix(R); }
+
+  double w() const { return w_; }
+  double x() const { return x_; }
+  double y() const { return y_; }
+  double z() const { return z_; }
+
+  double &w() { return w_; }
+  double &x() { return x_; }
+  double &y() { return y_; }
+  double &z() { return z_; }
+
+  void normalize() {
+    const double n = std::sqrt(w_ * w_ + x_ * x_ + y_ * y_ + z_ * z_);
+    if (n == 0.0) {
+      w_ = 1.0;
+      x_ = y_ = z_ = 0.0;
+      return;
+    }
+    w_ /= n;
+    x_ /= n;
+    y_ /= n;
+    z_ /= n;
+  }
+
+ private:
+  void fromRotationMatrix(const Matrix3d &R) {
+    const double trace = R(0, 0) + R(1, 1) + R(2, 2);
+    if (trace > 0.0) {
+      const double s = std::sqrt(trace + 1.0) * 2.0;
+      w_ = 0.25 * s;
+      x_ = (R(2, 1) - R(1, 2)) / s;
+      y_ = (R(0, 2) - R(2, 0)) / s;
+      z_ = (R(1, 0) - R(0, 1)) / s;
+    } else if (R(0, 0) > R(1, 1) && R(0, 0) > R(2, 2)) {
+      const double s = std::sqrt(1.0 + R(0, 0) - R(1, 1) - R(2, 2)) * 2.0;
+      w_ = (R(2, 1) - R(1, 2)) / s;
+      x_ = 0.25 * s;
+      y_ = (R(0, 1) + R(1, 0)) / s;
+      z_ = (R(0, 2) + R(2, 0)) / s;
+    } else if (R(1, 1) > R(2, 2)) {
+      const double s = std::sqrt(1.0 + R(1, 1) - R(0, 0) - R(2, 2)) * 2.0;
+      w_ = (R(0, 2) - R(2, 0)) / s;
+      x_ = (R(0, 1) + R(1, 0)) / s;
+      y_ = 0.25 * s;
+      z_ = (R(1, 2) + R(2, 1)) / s;
+    } else {
+      const double s = std::sqrt(1.0 + R(2, 2) - R(0, 0) - R(1, 1)) * 2.0;
+      w_ = (R(1, 0) - R(0, 1)) / s;
+      x_ = (R(0, 2) + R(2, 0)) / s;
+      y_ = (R(1, 2) + R(2, 1)) / s;
+      z_ = 0.25 * s;
+    }
+  }
+
+  double w_;
+  double x_;
+  double y_;
+  double z_;
+};
+
+}  // namespace Eigen

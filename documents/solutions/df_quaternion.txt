@@ -1,0 +1,27 @@
+Quadrotor differential flatness (Q3)
+
+Trajectory:
+  x = 10 cos(t) / (1 + sin^2(t))
+  y = 10 sin(t) cos(t) / (1 + sin^2(t))
+  z = 10
+
+Velocity and acceleration (analytic):
+  vx = -10 sin(t) (3 - sin^2(t)) / (1 + sin^2(t))^2
+  vy = 10 (1 - 3 sin^2(t)) / (1 + sin^2(t))^2
+  ax = (fp * d - 4 f sin(t) cos(t)) / d^3, fp = -30 cos^3(t), f = -10 sin(t) (3 - sin^2(t))
+  ay = (gp * d - 4 g sin(t) cos(t)) / d^3, gp = -60 sin(t) cos(t), g = 10 (1 - 3 sin^2(t))
+
+Attitude construction (FLU):
+  psi = atan2(vy, vx)
+  b3 = (a + g e3) / ||a + g e3||
+  b1d = [cos(psi), sin(psi), 0]^T
+  b2 = (b3 x b1d) / ||b3 x b1d||
+  b1 = b2 x b3
+  R = [b1 b2 b3], q = quat(R), normalized with w >= 0
+
+Output files:
+  CSV: documents/solutions/df_quaternion.csv
+
+Quaternion component ranges:
+  min [x y z w] = [-0.5450668, -0.5451039, -0.9238758, 0.0055232]
+  max [x y z w] = [0.5451245, 0.5450784, 0.8613936, 0.923877]
