@@ -1,0 +1,130 @@
+#pragma once
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+
+namespace Eigen {
+
+class Vector3d {
+ public:
+  Vector3d() : data_{0.0, 0.0, 0.0} {}
+  Vector3d(double x, double y, double z) : data_{x, y, z} {}
+
+  double x() const { return data_[0]; }
+  double y() const { return data_[1]; }
+  double z() const { return data_[2]; }
+
+  double &x() { return data_[0]; }
+  double &y() { return data_[1]; }
+  double &z() { return data_[2]; }
+
+  double operator[](int idx) const { return data_[idx]; }
+  double &operator[](int idx) { return data_[idx]; }
+
+  Vector3d operator+(const Vector3d &other) const {
+    return Vector3d(x() + other.x(), y() + other.y(), z() + other.z());
+  }
+
+  Vector3d operator-(const Vector3d &other) const {
+    return Vector3d(x() - other.x(), y() - other.y(), z() - other.z());
+  }
+
+  Vector3d operator*(double scalar) const {
+    return Vector3d(x() * scalar, y() * scalar, z() * scalar);
+  }
+
+  Vector3d operator/(double scalar) const {
+    return Vector3d(x() / scalar, y() / scalar, z() / scalar);
+  }
+
+  double norm() const { return std::sqrt(x() * x() + y() * y() + z() * z()); }
+
+  Vector3d normalized() const {
+    const double n = norm();
+    if (n == 0.0) {
+      return Vector3d();
+    }
+    return (*this) / n;
+  }
+
+  Vector3d cross(const Vector3d &other) const {
+    return Vector3d(y() * other.z() - z() * other.y(),
+                    z() * other.x() - x() * other.z(),
+                    x() * other.y() - y() * other.x());
+  }
+
+ private:
+  std::array<double, 3> data_{};
+};
+
+inline Vector3d operator*(double scalar, const Vector3d &vec) {
+  return vec * scalar;
+}
+
+class Vector4d {
+ public:
+  Vector4d() : data_{0.0, 0.0, 0.0, 0.0} {}
+  Vector4d(double x, double y, double z, double w) : data_{x, y, z, w} {}
+
+  double x() const { return data_[0]; }
+  double y() const { return data_[1]; }
+  double z() const { return data_[2]; }
+  double w() const { return data_[3]; }
+
+  double &x() { return data_[0]; }
+  double &y() { return data_[1]; }
+  double &z() { return data_[2]; }
+  double &w() { return data_[3]; }
+
+  Vector4d cwiseMin(const Vector4d &other) const {
+    return Vector4d(std::min(x(), other.x()), std::min(y(), other.y()),
+                    std::min(z(), other.z()), std::min(w(), other.w()));
+  }
+
+  Vector4d cwiseMax(const Vector4d &other) const {
+    return Vector4d(std::max(x(), other.x()), std::max(y(), other.y()),
+                    std::max(z(), other.z()), std::max(w(), other.w()));
+  }
+
+ private:
+  std::array<double, 4> data_{};
+};
+
+class Matrix3d {
+ public:
+  Matrix3d() {
+    for (auto &row : data_) {
+      row = {0.0, 0.0, 0.0};
+    }
+  }
+
+  class ColProxy {
+   public:
+    ColProxy(Matrix3d &mat, int col) : mat_(mat), col_(col) {}
+
+    ColProxy &operator=(const Vector3d &vec) {
+      mat_.data_[0][col_] = vec.x();
+      mat_.data_[1][col_] = vec.y();
+      mat_.data_[2][col_] = vec.z();
+      return *this;
+    }
+
+    operator Vector3d() const {
+      return Vector3d(mat_.data_[0][col_], mat_.data_[1][col_], mat_.data_[2][col_]);
+    }
+
+   private:
+    Matrix3d &mat_;
+    int col_;
+  };
+
+  ColProxy col(int idx) { return ColProxy(*this, idx); }
+
+  double operator()(int row, int col) const { return data_[row][col]; }
+
+ private:
+  std::array<std::array<double, 3>, 3> data_{};
+};
+
+}  // namespace Eigen
